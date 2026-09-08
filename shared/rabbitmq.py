@@ -41,7 +41,7 @@ def publicar(channel, tipo_exchange: str, routing_key, mensagem):
 def consumir(channel, queue_name: str, callback):
     def _callback(ch, method, properties, body):
         payload = json.loads(body)
-        callback(payload)
+        callback(ch, payload)
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
     channel.basic_consume(
