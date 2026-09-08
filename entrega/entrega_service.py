@@ -30,8 +30,6 @@ def callback(channel, dados):
     
     rabbit.publicar(channel, "eCommerce", "pedido.enviado", mensagem)
 
-    pass
-
 def main():
     connection, channel = rabbit.conectar()
     rabbit.exchange_ecommercie(channel)
