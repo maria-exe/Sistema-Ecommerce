@@ -10,7 +10,7 @@ def main():
     rabbit.exchange_promocoes(channel)
 
     queue_name = "fila_c1"
-    binding_keys = ["promocao.categoria.livros", "promocao.categoria.tecnologia"] # tem interesse na categoria A e B
+    binding_keys = ["promocao.categoria.romance", "promocao.categoria.terror"] # tem interesse na categoria A e B
 
     rabbit.binding(channel, queue_name, binding_keys, "promocoes")
     rabbit.consumir(channel, queue_name, callback)
