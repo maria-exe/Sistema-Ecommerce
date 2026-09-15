@@ -6,26 +6,29 @@ class Pagamento:
         self.connection, self.channel = rabbit.conectar()
         rabbit.exchange_ecommercie(self.channel)
 
-        self.queue_name = "fila_entrega"
+        self.queue_name = "fila_pagamento"
 
     def consumir_evento(self):
-        binding_keys = ["pagamento.aprovado"]
+        binding_keys = ["pedido.estoque_ok"]
         rabbit.binding(self.channel, self.queue_name, binding_keys, "eCommerce")
         rabbit.consumir(self.channel, self.queue_name, self.callback)
 
     def publicar_evento(self, pedido, routing_key):
-        rabbit.publicar(self.channel, "eCommerce", routing_key, pedido) # melhorar a mensagem de pagamento depois!
+        rabbit.publicar(self.channel, "eCommerce", routing_key, pedido) 
 
-    def callback(self, dados):
-        pedido = dados["id_pedido"]
-        resultado = self.processa_pagamento(pedido)
+    def callback(self, ch, chave, pedido):
+        id_pedido = pedido["id_pedido"]
+        resultado = self.processa_pagamento(id_pedido)
 
         if resultado: 
+            print(f"\nPagamento aprovado para pedido {id_pedido}")
             self.publicar_evento(pedido, "pagamento.aprovado")
         else: 
+            print(f"\nPagamento recusado para pedido {id_pedido}")
             self.publicar_evento(pedido, "pagamento.recusado")
 
-    def processa_pagamento(self):
+    def processa_pagamento(self, id_pedido):
+        print(f"\nProcessando pagamento do pedido: {id_pedido}\n")
         return random.choice([True, False])
 
 def main():

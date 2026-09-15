@@ -1,5 +1,7 @@
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import shared.rabbitmq as rabbit
-import random 
+import random
 
 # nao esquecer de adicionar criptografia
 class Entrega: 
@@ -18,26 +20,31 @@ class Entrega:
     def publicar_evento(self, mensagem):
         rabbit.publicar(self.channel, "eCommerce", "pedido.enviado", mensagem)    
 
-    def callback(self, dados):
+    def callback(self, ch, chave, dados):
         id_pedido = dados["id_pedido"]  # verificar se essa é a melhor forma para acessar os dados
-        produto = dados["produto"]
-        valor = dados["valor"]
+        produtos = dados["produtos"]
 
-        self.emite_nota(id_pedido, produto, valor)
-        mensagem = self.prepara_entrega(id_pedido)
+        print(f"\nPedido: {id_pedido} recebido.")
+
+        self.emitir_nota(id_pedido, produtos)
+        mensagem = self.preparar_entrega(id_pedido)
         self.publicar_evento(mensagem)
 
-    def emitir_nota(self, pedido, produto, valor):
+        print(f"\nPedido: {id_pedido} enviado.")
+
+    def emitir_nota(self, pedido, produtos):
         n_nota = random.randint(100, 1000)
-        print(f"NOTA FISCAL   n° {n_nota}\n")
+        print(f"\nNOTA FISCAL   n° {n_nota}\n")
         print("-------------------------------------")
-        print(f"Pedido: {pedido}\nProduto: {produto}\nValor (R$): {valor}")
+        print(f"Pedido: {pedido}")
+        for item in produtos:
+            print(f"Livro: {item['id_livro']} | Quantidade: {item['quantidade']}")
         print("-------------------------------------")
         
-    def preparar_entrega(pedido): 
+    def preparar_entrega(self, pedido): 
         print(f"Processo de entrega iniciada para pedido: {pedido}\n")
 
-        mensagem = { # adicionar mais dados nessa mensagem depois
+        mensagem = { 
             "id_pedido": pedido
         }
         return mensagem

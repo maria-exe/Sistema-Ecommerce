@@ -9,7 +9,7 @@ cursor = connection.cursor()
 
 create_table = '''
     CREATE TABLE IF NOT EXISTS Livros (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, 
+        id TEXT, 
         titulo TEXT NOT NULL,
         autor TEXT NOT NULL,
         categoria TEXT NOT NULL,
@@ -20,51 +20,46 @@ create_table = '''
 cursor.execute(create_table)
 connection.commit()
 
-# preencher o banco de dados
-livros = [
-    ("O Retrato de Dorian Gray", "Oscar Wilde", "Romance", 60.40, 10), 
-    ("O Hobbit", "J.R.R Tolkien", "Romance", 50, 1),
-    ("A Figura", "Natalia Grecco", "Terror", 56, 4),  
-    ("Misery", "Stephen King", "Terror", 40, 0), 
-    ("Joy", "Etsuko", "Quadrinhos", 30.00, 2),
-    ("Define The Relationship", "Flona", "Quadrinhos", 76.80, 3),
-    ("Vidas Secas", "Graciliano Ramos", "Romance", 25, 6), 
-    ("Mrs. Dalloway", "Virginia Woolf", "Romance", 41.24, 15),
-    ("Frankenstein", "Mary Shelley", "Terror", 35, 2),  
-    ("Drácula", "Bram Stoker", "Terror", 42, 0), 
-    ("Atelier of Witch", "Kamone", "Quadrinhos", 38, 5),
-    ("Nana", "Ai Yazawa", "Quadrinhos", 26.30, 3),
-]
+# preenche o bd
+cursor.execute("SELECT COUNT(*) FROM Livros")
+if cursor.fetchone()[0] == 0:
+    livros = [
+        ("l01", "O Retrato de Dorian Gray", "Oscar Wilde", "Romance", 60.40, 10), 
+        ("l02", "Atelier of Witch", "Kamone", "Quadrinhos", 38, 5),
+        ("l03", "Vidas Secas", "Graciliano Ramos", "Romance", 25, 5), 
+        ("l04", "Misery", "Stephen King", "Terror", 40, 1), 
+        ("l05", "Mrs. Dalloway", "Virginia Woolf", "Romance", 41.24, 15)
+    ]
 
-cursor.executemany (
-'INSERT INTO Livros (titulo, autor, categoria, preco, quantidade) VALUES (?, ?, ?, ?, ?)', 
-livros )
+    cursor.executemany (
+    'INSERT INTO Livros (id, titulo, autor, categoria, preco, quantidade) VALUES (?, ?, ?, ?, ?, ?)', 
+    livros )
 
-connection.commit()
+    connection.commit()
 
-    # funcoes para manipulacao do bd para o servico estoque
-def verifica_estoque(pedidos): # -> recebe uma lista como parametro)
+# funcoes para manipular o estoque
+def verificar_estoque(pedidos): 
     for pedido in pedidos:
-        titulo = pedido["titulo"] # trocar para usar id
+        id_livro = pedido["id_livro"] 
         quantidade = pedido["quantidade"]
         
-        cursor.execute("SELECT quantidade FROM Livros WHERE titulo = ?", (titulo,))
+        cursor.execute("SELECT quantidade FROM Livros WHERE id = ?", (id_livro,))
         estoque = cursor.fetchone()
         
-        if estoque is None  or estoque[0] < quantidade:
+        if estoque is None or estoque[0] < quantidade:
             return False
-    return True # tem estoque
+    return True 
 
 def devolver_produto(pedidos):
     for pedido in pedidos:
-        titulo = pedido["titulo"]
+        id_livro = pedido["id_livro"]
         quantidade = pedido["quantidade"]
-        cursor.execute("UPDATE Livros SET quantidade = quantidade + ? WHERE titulo = ?", (quantidade, titulo,))
+        cursor.execute("UPDATE Livros SET quantidade = quantidade + ? WHERE id = ?", (quantidade, id_livro,))
     connection.commit()
 
-def reserve_produto(pedidos):
+def reservar_produto(pedidos):
     for pedido in pedidos:
-        titulo = pedido["titulo"]
+        id_livro = pedido["id_livro"]
         quantidade = pedido["quantidade"]
-        cursor.execute("UPDATE Livros SET quantidade = quantidade - ? WHERE titulo = ?", (quantidade, titulo,))
+        cursor.execute("UPDATE Livros SET quantidade = quantidade - ? WHERE id = ?", (quantidade, id_livro,))
     connection.commit()

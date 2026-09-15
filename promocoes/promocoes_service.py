@@ -1,7 +1,7 @@
 import random, time
 import shared.rabbitmq as rabbit
-
-produtos = [
+# falta criotografia!
+produtos = [ 
     {"nome": "O Retrato de Dorian Gray", "categoria": "romance"}, # categoria A
     {"nome": "O Hobbit", "categoria": "romance"},
     {"nome": "A Figura", "categoria": "terror"},  # categoria B
@@ -19,19 +19,20 @@ class Promocoes:
         produto = random.choice(produtos)
         desconto = random.randint(5, 90)
 
-        return {  # verificar isso depois
-            "routing_key": f"promocao.categoria.{produto['categoria']}",
+        routing_key = f"promocao.categoria.{produto['categoria']}"
+        mensagem = {
             "dados": {
                 "categoria": produto["categoria"],
                 "produto": produto["nome"],
                 "desconto": desconto 
             }
         }
+        return routing_key, mensagem
     
     def publica_promocoes(self):
         while True: 
-            mensagem = self.gera_promocoes()
-            rabbit.publicar(self.channel, "promocoes", mensagem["routing_key"], mensagem) # padronizar esse routing key depois
+            routing_key, mensagem = self.gera_promocoes()
+            rabbit.publicar(self.channel, "promocoes", routing_key, mensagem)
             time.sleep(3) # pausa no envio
 
 def main(): 

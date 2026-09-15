@@ -33,7 +33,7 @@ def publicar(channel, tipo_exchange: str, routing_key, mensagem):
         exchange=tipo_exchange, 
         routing_key=routing_key, 
         body=json.dumps(mensagem),
-        properties=pika.BasicProperties(
+        properties=pika.BasicProperties (
             delivery_mode=pika.DeliveryMode.Persistent  
         )
     )
@@ -41,9 +41,10 @@ def publicar(channel, tipo_exchange: str, routing_key, mensagem):
 def consumir(channel, queue_name: str, callback):
     def _callback(ch, method, properties, body):
         payload = json.loads(body)
-        callback(ch, payload)
+        callback(ch, method.routing_key, payload)
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
+    channel.basic_qos(prefetch_count=1)
     channel.basic_consume(
         queue=queue_name, 
         on_message_callback=_callback, 

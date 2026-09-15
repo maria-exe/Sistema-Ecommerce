@@ -1,3 +1,5 @@
+import sys, os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import shared.rabbitmq as rabbit
 import bd.estoque_bd as bd
 
@@ -17,20 +19,30 @@ class Estoque:
     def publicar_evento(self, mensagem, routing_key):
         rabbit.publicar(self.channel, "eCommerce", routing_key, mensagem)
 
-    def callback(self, method, body): # padronizar os parâmetros para todos os serviços depois!!
-        chave = method.routing_key
-        # vai receber uma lista de livros como pedido ou livro individual? deve depender da implementacao do principal
-        # precisa implementar a variavel de pedidos pegando os dados do body aqui
+    def callback(self, ch, chave, mensagem):
+        livros_pedidos = mensagem["produtos"]
+        id_pedido = mensagem["id_pedido"]
+
+        print(f"Pedido {id_pedido} recebido.")
+        
         if chave == "pedido.criado":
-            temEstoque = bd.verifica_estoque(pedidos) # passa os itens como parâmetri
-            # verifica disponibilidade - chama funcao do bd
-            if(temEstoque):
-                self.publicar_evento(body, "pedido.estoque_ok") # todos os produtos precisam estar disponíveis!
-            else:  # caso não tenho produto disponível  
-                self.publicar_evento(body, "estoque.indisponivel") # pedido nao pode ser antendido
+            temEstoque = bd.verificar_estoque(livros_pedidos)
+            
+            if temEstoque: # verifica disponibilidade
+                bd.reservar_produto(livros_pedidos)
+                print(f"Pedido {id_pedido} em estoque, reservado")
+                self.publicar_evento(mensagem, "pedido.estoque_ok") 
+            else:   
+                print(f"Pedido {id_pedido} indisponivel\n")
+                self.publicar_evento(mensagem, "estoque.indisponivel") 
            
         elif chave == "pedido.excluido":
-            bd.devolver_produto(pedidos) # so chama funcao, e nao publica nada  
+            motivo = mensagem.get("motivo", "")
+            if motivo != "estoque.indisponivel":
+                bd.devolver_produto(livros_pedidos) 
+                print(f"Pedido {id_pedido} cancelado. Produtos devolvidos ao estoque.")
+            else:
+                print(f"Pedido {id_pedido} excluido por falta de estoque.")
 
 def main():
     estoque = Estoque()
