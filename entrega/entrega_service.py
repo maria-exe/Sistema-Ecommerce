@@ -11,17 +11,22 @@ class Entrega:
 
         self.queue_name = "fila_entrega"
 
+        dir = os.path.dirname(os.path.abspath(__file__))
+        self.servico = "entrega"
+        self.caminho = os.path.join(dir, "private_keys", "private_key.der")
+        self.caminho_publico = os.path.join(dir, "public_keys")
+
     def consumir_evento(self):
         binding_keys = ["pagamento.aprovado"]
 
         rabbit.binding(self.channel, self.queue_name, binding_keys, "eCommerce")
-        rabbit.consumir(self.channel, self.queue_name, self.callback)
+        rabbit.consumir(self.channel, self.queue_name, self.callback, self.caminho_publico)
 
     def publicar_evento(self, mensagem):
-        rabbit.publicar(self.channel, "eCommerce", "pedido.enviado", mensagem)    
+        rabbit.publicar(self.channel, self.servico, self.caminho, "eCommerce", "pedido.enviado", mensagem)    
 
     def callback(self, ch, chave, dados):
-        id_pedido = dados["id_pedido"]  # verificar se essa é a melhor forma para acessar os dados
+        id_pedido = dados["id_pedido"]  
         produtos = dados["produtos"]
 
         print(f"\nPedido: {id_pedido} recebido.")

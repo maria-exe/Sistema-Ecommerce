@@ -10,14 +10,19 @@ class Estoque:
         
         self.queue_name = "fila_estoque"
 
+        dir = os.path.dirname(os.path.abspath(__file__))
+        self.servico = "estoque"
+        self.caminho = os.path.join(dir, "private_keys", "private_key.der")
+        self.caminho_publico = os.path.join(dir, "public_keys")
+
     def consumir_evento(self):
         binding_keys = ["pedido.criado", "pedido.excluido"]
 
         rabbit.binding(self.channel, self.queue_name, binding_keys, "eCommerce")
-        rabbit.consumir(self.channel, self.queue_name, self.callback)
+        rabbit.consumir(self.channel, self.queue_name, self.callback, self.caminho_publico)
 
     def publicar_evento(self, mensagem, routing_key):
-        rabbit.publicar(self.channel, "eCommerce", routing_key, mensagem)
+        rabbit.publicar(self.channel, self.servico, self.caminho, "eCommerce", routing_key, mensagem)
 
     def callback(self, ch, chave, mensagem):
         livros_pedidos = mensagem["produtos"]

@@ -19,6 +19,11 @@ class Principal:
 
         self.queue_name = "fila_principal"
 
+        dir = os.path.dirname(os.path.abspath(__file__))
+        self.servico = "principal"
+        self.caminho = os.path.join(dir, "private_keys", "private_key.der")
+        self.caminho_publico = os.path.join(dir, "public_keys")
+
         self.pedidos_lock = threading.Lock()
         self.pedidos = {}
    
@@ -62,10 +67,11 @@ class Principal:
         binding_keys = ["pagamento.aprovado", "pagamento.recusado", "pedido.enviado", "pedido.estoque_ok", "estoque.indisponivel"]
         
         rabbit.binding(self.consome_channel, self.queue_name, binding_keys, "eCommerce")
-        rabbit.consumir(self.consome_channel, self.queue_name, self.callback)
+        rabbit.consumir(self.consome_channel, self.queue_name, self.callback, self.caminho_publico)
 
-    def publicar_evento(self, mensagem, routing_key): 
-        rabbit.publicar(self.publica_channel, "eCommerce", routing_key, mensagem)
+    def publicar_evento(self, mensagem, routing_key, canal=None): 
+        canal_usado = canal if canal else self.publica_channel
+        rabbit.publicar(canal_usado, self.servico, self.caminho, "eCommerce", routing_key, mensagem)
 
     # funcoes de iteracao
     def excluir_pedido(self, id_pedido):        
@@ -81,7 +87,7 @@ class Principal:
             "produtos": produtos
         }
 
-        rabbit.publicar(self.publica_channel, "eCommerce", "pedido.excluido", mensagem) 
+        self.publicar_evento(mensagem, "pedido.excluido", self.publica_channel)
         print(f"\nPedido {id_pedido} excluido")
 
     def realizar_pedido(self):
@@ -110,7 +116,7 @@ class Principal:
         with self.pedidos_lock:
             self.pedidos[id_pedido] = {"status": "criado", "produtos": livros}
 
-        rabbit.publicar(self.publica_channel, "eCommerce", "pedido.criado", mensagem)
+        self.publicar_evento(mensagem, "pedido.criado", self.publica_channel)
         print(f"Pedido {id_pedido} enviado. Para consulta status, acesse o menu.")
 
     def visualizar_produto(self):
@@ -153,7 +159,7 @@ class Principal:
                     "produtos": produtos,
                     "motivo": chave 
                 }
-                rabbit.publicar(ch, "eCommerce", "pedido.excluido", mensagem_exclusao)
+                self.publicar_evento(mensagem_exclusao, "pedido.excluido", ch)
 
 def main():
     principal = Principal()
