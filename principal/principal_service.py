@@ -53,9 +53,8 @@ class Principal:
                 case "4":
                     self.consultar_pedido()
                 case "5":
-                    self.publica_connection.close()
-                    self.consome_connection.close()
                     print("Adeus!")
+                    os._exit(0)
                     break
                 case _:
                     return "Entrada invalida"
@@ -79,6 +78,12 @@ class Principal:
             if id_pedido not in self.pedidos:
                 print("Pedido não encontrado.")
                 return
+
+            status_atual = self.pedidos[id_pedido]["status"]
+            if "excluido" in status_atual:
+                print(f"\nO pedido {id_pedido} ja foi excluido.")
+                return
+            
             produtos = self.pedidos[id_pedido]["produtos"]
             self.pedidos[id_pedido]["status"] = "excluido"
 
