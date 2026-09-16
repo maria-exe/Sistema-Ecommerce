@@ -1,6 +1,5 @@
 import shared.rabbitmq as rabbit
 
-# vai precisar verificar assinatura digital aqui!!
 def callback(channel, dados):
     promocao = dados["dados"]
     print(f"PROMOÇÃO! {promocao['produto']} com {promocao['desconto']}% de desconto! [{promocao['categoria']}]")

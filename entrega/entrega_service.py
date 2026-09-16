@@ -3,7 +3,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import shared.rabbitmq as rabbit
 import random
 
-# nao esquecer de adicionar criptografia
 class Entrega: 
     def __init__(self):
         self.connection, self.channel = rabbit.conectar()
