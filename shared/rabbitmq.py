@@ -36,6 +36,7 @@ def publicar(channel, publisher, caminho, tipo_exchange: str, routing_key, mensa
 
     key = RSA.import_key(open(caminho, 'rb').read())
     hash_dados = SHA256.new(body)
+    
     assinatura = pkcs1_15.new(key).sign(hash_dados)
 
     properties = pika.BasicProperties(
@@ -66,11 +67,19 @@ def consumir(channel, queue_name: str, callback, caminho_publico):
 
             # verifica assinatura
             hash_dados = SHA256.new(body)
-            pkcs1_15.new(key).verify(hash_dados, assinatura)
+
+            try:
+                pkcs1_15.new(key).verify(hash_dados, assinatura)
+            except (ValueError, TypeError):
+                print("Assinatura invalida")
+
+                ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+                return
 
             conteudo = json.loads(body.decode("utf-8"))
             callback(ch, method.routing_key, conteudo)
             ch.basic_ack(delivery_tag=method.delivery_tag)
+            
 
         except (ValueError, TypeError, OSError, FileNotFoundError):
             print(f"Assinatura de {publisher} invalida.")

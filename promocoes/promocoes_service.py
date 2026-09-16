@@ -17,6 +17,11 @@ class Promocoes:
         self.connection, self.channel = rabbit.conectar()
         rabbit.exchange_promocoes(self.channel)
 
+        dir_atual = os.path.dirname(os.path.abspath(__file__))
+        self.servico = "promocoes"
+        self.caminho_privado = os.path.join(dir_atual, "private_keys", "private_key.der")
+
+
     def gera_promocoes(self):
         produto = random.choice(produtos)
         desconto = random.randint(5, 90)
@@ -34,7 +39,7 @@ class Promocoes:
     def publica_promocoes(self):
         while True: 
             routing_key, mensagem = self.gera_promocoes()
-            rabbit.publicar(self.channel, "promocoes", routing_key, mensagem)
+            rabbit.publicar(self.channel, self.servico, self.caminho_privado, "promocoes", routing_key, mensagem)
             time.sleep(3) # pausa no envio
 
 def main(): 

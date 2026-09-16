@@ -2,7 +2,7 @@ import os
 from Crypto.PublicKey import RSA
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-SERVICOS = ["principal", "estoque", "pagamento", "entrega"]
+SERVICOS = ["principal", "estoque", "pagamento", "entrega", "promocoes"]
 
 def gera_chaves():
     chaves = {}
@@ -33,6 +33,13 @@ def gera_chaves():
         for produtor in produtores:
             with open(os.path.join(pasta_publica, f"public_key_{produtor}.der"), 'wb') as f:
                 f.write(chaves[produtor])
+
+
+    pasta_publica_consumidores = os.path.join(BASE_DIR, "public_keys")
+    os.makedirs(pasta_publica_consumidores, exist_ok=True)
+    
+    with open(os.path.join(pasta_publica_consumidores, "public_key_promocoes.der"), 'wb') as f:
+        f.write(chaves["promocoes"])
                 
     print("\nChaves geradas!")
 
