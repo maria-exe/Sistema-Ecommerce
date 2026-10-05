@@ -63,3 +63,9 @@ def reservar_produto(pedidos):
         quantidade = pedido["quantidade"]
         cursor.execute("UPDATE Livros SET quantidade = quantidade - ? WHERE id = ?", (quantidade, id_livro,))
     connection.commit()
+
+# nova funcao que vai ser chamada para a api 
+# lista todos os produtos que estao em estoque
+def consulta_produtos():
+    produtos = cursor.execute("SELECT * from Livros WHERE quantidade > 0")
+    return produtos
