@@ -10,7 +10,7 @@ class Pedido(BaseModel):
 app = FastAPI (
     title="Paper Paws", # mudar depois rs
     version="1.0.0",
-    description="",
+    description="Escrever alguma descrição aqui!",
 )
 
 # get = bsucar dados (consultar ou ler informacoes existentes)
@@ -22,10 +22,12 @@ app = FastAPI (
     # parametros: email
 
 # cancelar interesse
-
+@app.get("/", include_in_schema=False)
+def read_root():
+    return RedirectResponse(url="/docs")
 
 # listar produtos
-@app.get("/produtos", responses={
+@app.get("/produtos", tags=["pedido"], responses={
     200: {"description": "Lista de produtos"},
     422: {"description": "Lista de produtos"},
     500: {"description": "Lista de produtos"},
@@ -34,13 +36,13 @@ async def livros(
     livro: Pedido 
 ):
     # chama api de estoque
-    return {"message": "Eita mundo!"}
+    return data
 
-@app.post("/pedido")
+@app.post("/pedido", tags=["pedido"])
 async def criar_pedido():
     pass
 
-@app.post("/registro/{id_livro}")
+@app.post("/registro/{id_livro}", tags=["pedido"])
 async def registro_interesse(
     email: str = Query(description="Email do cliente", example="cliente@exemplo.com"),
     id_livro: str = None
@@ -56,13 +58,14 @@ async def registro_interesse(
         "mensagem": "Interesse registrado!"
     }
 
-@app.delete("/livros/{id_livro}")
+@app.delete("/livros/{id_livro}", tags=["pedido"])
 async def cancela_interesse(
     email: str = Query(description="Email do cliente", example="cliente@exemplo.com"),
     id_livro: str = None
 ):  
     try: 
-        cancelar_interesse(id_livro) # criar funcao
+        pass
+        # cancelar_interesse(id_livro) # criar funcao
     except Exception as exc: 
         raise HTTPException(status_code=500, detail=f"Erro inesperado: {exc}")
 
