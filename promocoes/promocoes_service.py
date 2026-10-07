@@ -2,16 +2,10 @@ import random, time
 import sys, os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import shared.rabbitmq as rabbit
-# falta criotografia!
-produtos = [ 
-    {"nome": "O Retrato de Dorian Gray", "categoria": "romance"}, # categoria A
-    {"nome": "O Hobbit", "categoria": "romance"},
-    {"nome": "A Figura", "categoria": "terror"},  # categoria B
-    {"nome": "Misery", "categoria": "terror"}, 
-    {"nome": "Joy", "categoria": "quadrinhos"}, # categoria C
-    {"nome": "Define The Relationship", "categoria": "quadrinhos"},
-]
 
+
+# consumir consulta o endpoint do estoque para gerar promocoes apenas de produtos em estoque
+# consome o evento interesse.promocao
 class Promocoes: 
     def __init__(self):
         self.connection, self.channel = rabbit.conectar()
@@ -22,25 +16,32 @@ class Promocoes:
         self.caminho_privado = os.path.join(dir_atual, "private_keys", "private_key.der")
 
 
-    def gera_promocoes(self):
-        produto = random.choice(produtos)
-        desconto = random.randint(5, 90)
+    # requisito: consome o evento interesse.promocao
+    def consumir_evento(self):
+        binding_keys = ["interesse.promocao"]
+        rabbit.binding(self.channel, self.queue_name, binding_keys, "eCommerce")
+        rabbit.consumir(self.channel, self.queue_name, self.callback, self.caminho_publico)
 
-        routing_key = f"promocao.categoria.{produto['categoria']}"
-        mensagem = {
-            "dados": {
-                "categoria": produto["categoria"],
-                "produto": produto["nome"],
-                "desconto": desconto 
-            }
-        }
-        return routing_key, mensagem
+
+    # def gera_promocoes(self):
+    #     produto = random.choice(produtos)
+    #     desconto = random.randint(5, 90)
+
+    #     routing_key = f"promocao.categoria.{produto['categoria']}"
+    #     mensagem = {
+    #         "dados": {
+    #             "categoria": produto["categoria"],
+    #             "produto": produto["nome"],
+    #             "desconto": desconto 
+    #         }
+    #     }
+    #     return routing_key, mensagem
     
-    def publica_promocoes(self):
-        while True: 
-            routing_key, mensagem = self.gera_promocoes()
-            rabbit.publicar(self.channel, self.servico, self.caminho_privado, "promocoes", routing_key, mensagem)
-            time.sleep(3) # pausa no envio
+    # def publica_promocoes(self):
+    #     while True: 
+    #         routing_key, mensagem = self.gera_promocoes()
+    #         rabbit.publicar(self.channel, self.servico, self.caminho_privado, "promocoes", routing_key, mensagem)
+    #         time.sleep(3) # pausa no envio
 
 def main(): 
     promocoes = Promocoes()

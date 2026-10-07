@@ -5,7 +5,3 @@ def valida_email(email):
     if re.match(padrao, email):
         return True
     return False
-
-# registra interesse
-def registra():
-    pass

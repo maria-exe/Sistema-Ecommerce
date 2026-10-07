@@ -4,14 +4,6 @@ import shared.rabbitmq as rabbit
 import uuid
 import threading 
 
-catalogo = [ 
-    {"id_livro": "l01", "titulo": "O Retrato de Dorian Gray"},
-    {"id_livro": "l02", "titulo": "Atelier of Witch"},
-    {"id_livro": "l03", "titulo": "Vidas Secas"},
-    {"id_livro": "l04", "titulo": "Misery"},
-    {"id_livro": "l05", "titulo": "Mrs. Dalloway"}
-]
-
 class Principal:
     def __init__(self):
         self.publica_connection, self.publica_channel = rabbit.conectar()
@@ -27,38 +19,6 @@ class Principal:
         self.pedidos_lock = threading.Lock()
         self.pedidos = {}
    
-    # funções de manipulacao e visualizacao de pedidos
-    def chat_usuario(self): 
-        while True:
-            print("\n============================")
-            print("1. Visualizar catálogo de livros")
-            print("2. Realizar pedidos")
-            print("3. Excluir pedidos")
-            print("4. Consultar pedidos")
-            print("5. Encerrar atendimento")
-            print("============================")
-
-            escolha = input("\nDigite: ")
-            match escolha:
-                case "1":
-                    self.visualizar_produto()  
-                case "2":
-                    self.realizar_pedido()
-                case "3":
-                    id_pedido = input("\nDigite o codigo do pedido para exclusao: ")
-                    if id_pedido:
-                        self.excluir_pedido(id_pedido)
-                    else:
-                        print("Codigo invalido!")
-                case "4":
-                    self.consultar_pedido()
-                case "5":
-                    print("Adeus!")
-                    os._exit(0)
-                    break
-                case _:
-                    return "Entrada invalida"
-    
     def consumir_evento(self): #
         self.consome_connection, self.consome_channel = rabbit.conectar()
         rabbit.exchange_ecommercie(self.consome_channel)
@@ -95,7 +55,7 @@ class Principal:
         self.publicar_evento(mensagem, "pedido.excluido", self.publica_channel)
         print(f"\nPedido {id_pedido} excluido")
 
-    def realizar_pedido(self):
+    def realizar_pedido(self): # modificar funcao para aceitar parametros recebidos da api
         livros = []
         while True: # interacao para escolher usuario
             self.visualizar_produto()
@@ -121,13 +81,8 @@ class Principal:
         with self.pedidos_lock:
             self.pedidos[id_pedido] = {"status": "criado", "produtos": livros}
 
-        self.publicar_evento(mensagem, "pedido.criado", self.publica_channel)
-        print(f"Pedido {id_pedido} enviado. Para consulta status, acesse o menu.")
-
-    def visualizar_produto(self):
-        print("\n==== CATÁLOGO DE LIVROS ====")
-        for item in catalogo:
-            print(f"{item['id_livro']} - {item['titulo']}")
+        # self.publicar_evento(mensagem, "pedido.criado", self.publica_channel)
+        # print(f"Pedido {id_pedido} enviado. Para consulta status, acesse o menu.")
 
     def consultar_pedido(self):
         with self.pedidos_lock: 
