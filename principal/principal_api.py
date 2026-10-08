@@ -2,13 +2,15 @@ from fastapi import FastAPI, Query, HTTPException
 from principal_functions import valida_email
 from pydantic import BaseModel
 import requests
+import principal_service as service
 
 # model - ver se pprecisa disso
 
 base_url = "http://127.0.0.1:8000/"
 
 class Pedido(BaseModel):
-    id_livro: str
+    categoria: str
+    email: str
     # ver quais campos precisa aqui
 
 app = FastAPI (
@@ -46,7 +48,7 @@ def livros():
         return response.json()
 
 # criar pedidos
-@app.post("/pedido", tags=["pedido"], response={
+@app.post("/pedido", tags=["pedido"], responses={
     200: {"description": "Pedido criado"},
     422: {"description": "Falha na requisicao"},
     500: {"description": "Erro ao criar pedido"},
@@ -59,7 +61,7 @@ def criar_pedido(
     pass
 
 # registrar interesse, informando email e categoria
-@app.post("/registro/{categoria}/{email}", tags=["pedido"])
+@app.post("/registro/{categoria}", tags=["interesse"])
 def registro_interesse(
     email: str = Query(description="Email do cliente", example="cliente@exemplo.com"),
     categoria: str = None
@@ -67,6 +69,7 @@ def registro_interesse(
     if not valida_email(email): # funcao de validacao de email
         raise HTTPException(status_code=422, detail="Endereço de email inválido.")
     try:
+        service.publicar_evento("interesse.promocao")
         # publica evento interesse.promocao em tal categoria e email
         pass
     except Exception as exc:
@@ -77,7 +80,7 @@ def registro_interesse(
     }
 
 
-@app.delete("/livros/{categoria}", tags=["pedido"], response={
+@app.delete("/livros/{categoria}", tags=["interesse"], responses={
     200: {"description": "Pronto! Seu e-mail foi removido da nossa lista"}
 })
 async def cancela_interesse(
