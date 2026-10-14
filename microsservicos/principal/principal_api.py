@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Query, HTTPException
-from principal_functions import valida_email
+from microsservicos.principal.principal_functions import valida_email
 from pydantic import BaseModel
 import requests
-import principal_service as service
+import microsservicos.principal.principal_service as service
 
 # model - ver se pprecisa disso
 

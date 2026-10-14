@@ -1,6 +1,6 @@
 import sys, os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-import shared.rabbitmq as rabbit
+import microsservicos.shared.rabbitmq as rabbit
 import random 
 
 class Pagamento:

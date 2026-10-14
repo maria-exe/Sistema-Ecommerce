@@ -1,7 +1,7 @@
 import sys, os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-import shared.rabbitmq as rabbit
-import bd.estoque_bd as bd
+import microsservicos.shared.rabbitmq as rabbit
+import microsservicos.estoque.bd.estoque_bd as bd
 
 class Estoque:
     def __init__(self):
