@@ -1,0 +1,52 @@
+body {
+    margin: 0;
+    font-family: 'Lora', Georgia, 'Times New Roman', serif;
+    background-color: #DBCDB4;
+    color: #1D1101;
+    padding: 0 60px
+}
+
+.menu {
+  display: flex;
+  justify-content: flex-end;  
+  gap: 30px;                 
+  margin-top: 2rem;
+  padding: 0 24px;         
+  background-color: #DBCDB4;
+
+  .botao {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    }
+}
+
+.titulo {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 500;
+}
+.subtitulo {
+    font-size: 2rem;
+    font-weight: 400;
+}
+
+.container-interesse {
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;   
+  text-align: center;
+   
+  h2 {
+    font-weight: 400;
+  }
+
+  .botao-interesse {
+    margin-top: 2rem;
+  }
+}
+
+.categorias {
+  text-align: left;    
+}

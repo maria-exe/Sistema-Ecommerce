@@ -1,17 +1,17 @@
+import requests, uvicorn
+
 from fastapi import FastAPI, Query, HTTPException
-from microsservicos.principal.principal_functions import valida_email
+from principal_functions import valida_email
 from pydantic import BaseModel
-import requests
-import microsservicos.principal.principal_service as service
 
-# model - ver se pprecisa disso
+from principal_service import Principal
 
-base_url = "http://127.0.0.1:8000/"
+service = Principal()
+base_url = "http://127.0.0.1:8080"
 
 class Pedido(BaseModel):
     categoria: str
     email: str
-    # ver quais campos precisa aqui
 
 app = FastAPI (
     title="Paper Paws", # mudar depois rs
@@ -19,28 +19,12 @@ app = FastAPI (
     description="Escrever alguma descrição aqui!",
 )
 
-# get = bsucar dados (consultar ou ler informacoes existentes)
-# post = registar um novo dado no servidor
-
-# listar produtos disponiveis em estoque
-# criar pedidos
-# registrar interesse
-    # parametros: email
-
-# cancelar interesse
-# @app.get("/", include_in_schema=False)
-# def read_root():
-#     return RedirectResponse(url="/docs")
-
-# pesquisar quando precisa ser async
-
 # listar produtos
 @app.get("/produtos", tags=["pedido"], responses={
-    200: {"description": "Consulta no estoque bem-sucedida"}, # mudar mensagens
+    200: {"description": "Consulta no estoque bem-sucedida"},
     500: {"description": "Erro ao consultar estoque"}
 })
 def livros():
-    # chama api de estoque que retorna todos os produtos disponiveis
     url = base_url + "/estoque" 
     response = requests.get(url)
 
@@ -48,17 +32,24 @@ def livros():
         return response.json()
 
 # criar pedidos
-@app.post("/pedido", tags=["pedido"], responses={
-    200: {"description": "Pedido criado"},
-    422: {"description": "Falha na requisicao"},
-    500: {"description": "Erro ao criar pedido"},
-})
-def criar_pedido(
-    id_livro: str = None,
-    quantidade: int = None
-):
-    # publicar evento pedido_criado?
-    pass
+# @app.post("/pedido", tags=["pedido"], responses={
+#     200: {"description": "Pedido criado"},
+#     422: {"description": "Falha na requisicao"},
+#     500: {"description": "Erro ao criar pedido"},
+# })
+# def criar_pedido(
+#     id_livro: str = None,
+#     quantidade: int = None
+# ):
+#     try:
+#         id_pedido = service.criar_pedido()
+#     except Exception as exc:
+#         raise HTTPException(status_code=500)
+
+#     return {
+#         "id_pedido": id_pedido, 
+#         "status": "criado"
+#     }
 
 # registrar interesse, informando email e categoria
 @app.post("/registro/{categoria}", tags=["interesse"])
@@ -67,32 +58,47 @@ def registro_interesse(
     categoria: str = None
 ):
     if not valida_email(email): # funcao de validacao de email
-        raise HTTPException(status_code=422, detail="Endereço de email inválido.")
+        raise HTTPException(status_code=422,)
     try:
-        service.publicar_evento("interesse.promocao")
-        # publica evento interesse.promocao em tal categoria e email
-        pass
+        mensagem = {
+            "email": email,
+            "categoria": categoria
+        }
+
+        service.publicar_evento(mensagem, "interesse.promocao")
+
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Erro inesperado: {exc}")
+        raise HTTPException(status_code=500)
 
     return {
         "mensagem": "Interesse registrado!"
     }
 
-
+# publica evento para cancelar interesse
 @app.delete("/livros/{categoria}", tags=["interesse"], responses={
-    200: {"description": "Pronto! Seu e-mail foi removido da nossa lista"}
+    200: {"description": "Cancelamento solicitado"},
+    422: {"description": "E-mail inválido"}
 })
-async def cancela_interesse(
-    email: str = Query(description="Email do cliente", example="cliente@exemplo.com"),
-    categoria: str = None
+def cancela_interesse(
+    categoria: str,
+    email: str = Query(description="Email do cliente", example="cliente@exemplo.com")
 ):  
+    if not valida_email(email): # funcao de validacao de email
+        raise HTTPException(status_code=422,)
     try: 
-        pass
-        # cancelar_interesse(id_livro) - criar funcao
+        mensagem = {
+            "email": email,
+            "categoria": categoria
+        }
+
+        service.publicar_evento(mensagem, "interesse.cancelado")
+
     except Exception as exc: 
-        raise HTTPException(status_code=500, detail=f"Erro inesperado: {exc}")
+        raise HTTPException(status_code=500)
 
     return {
         "mensagem": f"Inscrição cancelada para {categoria}!"
     }
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

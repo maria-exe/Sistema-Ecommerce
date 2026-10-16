@@ -24,18 +24,6 @@ class Entrega:
     def publicar_evento(self, mensagem):
         rabbit.publicar(self.channel, self.servico, self.caminho, "eCommerce", "pedido.enviado", mensagem)    
 
-    def callback(self, ch, chave, dados):
-        id_pedido = dados["id_pedido"]  
-        produtos = dados["produtos"]
-
-        print(f"\nPedido: {id_pedido} recebido.")
-
-        self.emitir_nota(id_pedido, produtos)
-        mensagem = self.preparar_entrega(id_pedido)
-        self.publicar_evento(mensagem)
-
-        print(f"\nPedido: {id_pedido} enviado.")
-
     def emitir_nota(self, pedido, produtos):
         n_nota = random.randint(100, 1000)
         print(f"\nNOTA FISCAL   n° {n_nota}\n")
@@ -52,6 +40,18 @@ class Entrega:
             "id_pedido": pedido
         }
         return mensagem
+
+    def callback(self, ch, chave, dados):
+        id_pedido = dados["id_pedido"]  
+        produtos = dados["produtos"]
+
+        print(f"\nPedido: {id_pedido} recebido.")
+
+        self.emitir_nota(id_pedido, produtos)
+        mensagem = self.preparar_entrega(id_pedido)
+        self.publicar_evento(mensagem)
+
+        print(f"\nPedido: {id_pedido} enviado.")
 
 def main():
     entrega = Entrega()

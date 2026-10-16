@@ -1,6 +1,6 @@
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import microsservicos.shared.rabbitmq as rabbit
+import shared.rabbitmq as rabbit
 import uuid
 import threading 
 
@@ -53,36 +53,23 @@ class Principal:
         }
 
         self.publicar_evento(mensagem, "pedido.excluido", self.publica_channel)
-        print(f"\nPedido {id_pedido} excluido")
 
-    def realizar_pedido(self): # modificar funcao para aceitar parametros recebidos da api
-        livros = []
-        while True: # interacao para escolher usuario
-            self.visualizar_produto()
-            livro = input("\nDigite o id do livro desejado (ou sair para encerrar): ")
-
-            if livro.lower() == "sair":
-                break
-
-            quantidade = int(input("\nQuantidade: "))
-            livros.append({"id_livro": livro, "quantidade": quantidade})
-
-        if not livros:
-            print("Nenhum produto selecionado.")
-            return
-
+    def criar_pedido(self, produtos):
+        if not produtos:
+            raise ValueError("Nenhum produto selecionado.")
+        
         id_pedido = str(uuid.uuid4())[:8] 
 
         mensagem = {
             "id_pedido": id_pedido,
-            "produtos": livros
+            "produtos": produtos
         }
 
         with self.pedidos_lock:
-            self.pedidos[id_pedido] = {"status": "criado", "produtos": livros}
-
-        # self.publicar_evento(mensagem, "pedido.criado", self.publica_channel)
-        # print(f"Pedido {id_pedido} enviado. Para consulta status, acesse o menu.")
+            self.pedidos[id_pedido] = {"status": "criado", "produtos": produtos}
+        self.publicar_evento(mensagem, "pedido.criado", self.publica_channel)
+        
+        return id_pedido
 
     def consultar_pedido(self):
         with self.pedidos_lock: 
@@ -126,6 +113,5 @@ def main():
     thread_eventos = threading.Thread(target=principal.consumir_evento, daemon=True)
     thread_eventos.start()
 
-    principal.chat_usuario()
 if __name__ == "__main__":
     main() 

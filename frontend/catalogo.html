@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>
+            Sebo Decidir
+        </title>
+        <link rel="stylesheet" href="style.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    </head>
+    <body>
+        <div class="menu">
+           <button class="botao">
+                <img src="assets/clipboard-list.svg" alt="Pedidos">
+           </button>
+            <button class="botao">
+                <img src="assets/shopping-cart.svg" alt="Carrinho">
+           </button>
+        </div>
+        <h1 class="titulo">
+            Sebo Decidir
+        </h1>
+        <h2 class="subtitulo">Catálogo</h2>
+        <div class="container-catalogo" id="catalogo"></div>
+        
+        <div class="container-interesse">
+            <h2>Inscreva-se para receber promoções!</h2>
+            <label for="email">Seu e-mail</label>
+            <input type="email" id="email" name="email" required placeholder="Ex. seuemail@gmail.com"> 
+
+            <p>Escolha seus gêneros favoritos</p>
+            
+            <div class="categorias">
+                <input type="checkbox" id="romance" name="genero" value="romance">
+                <label for="romance">Romance</label><br>
+
+                <input type="checkbox" id="terror" name="genero" value="terror">
+                <label for="terror">Terror</label><br>
+
+                <input type="checkbox" id="quadrinhos" name="genero" value="quadrinho">
+                <label for="ficcao">Quadrinhos</label><br>
+            </div>
+
+            <button class="botao-interesse">Enviar</button>
+        </div>
+        <footer>
+            @Sebo Decidir
+        </footer>
+        <script src="api.js"></script>
+        <script src="catalogo.js"></script>
+    </body>
+</html>

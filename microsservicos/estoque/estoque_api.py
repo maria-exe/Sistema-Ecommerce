@@ -1,23 +1,29 @@
+import uvicorn
 from fastapi import FastAPI
-from .bd.estoque_bd import consulta_produtos
+from bd.estoque_bd import consulta_produtos
 
-app = FastAPI("Estoque do Paper Paws")
+app = FastAPI(
+    title="Estoque do Sebo"
+)
 
-@app.get("/estoque", summary="produtos em estoque")
+@app.get("/estoque", tags=["estoque"], summary="produtos em estoque")
 def consultar_estoque():
     produtos = consulta_produtos()
 
     produtos_disponiveis = [
         {
-            "id_produto": produto[0],
-            "nome": produto[1],
-            "categoria": produto[2],
-            "preco": produto[3],
-            "estoque": produto[4]
+            "id": produto[0],
+            "titulo": produto[1],
+            "autor": produto[2],
+            "categoria": produto[3],
+            "preco": produto[4], 
+            "quantidade": produto[4]
         }
         for produto in produtos
     ]
-
     return {
         "produtos": produtos_disponiveis
     }
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8080)
