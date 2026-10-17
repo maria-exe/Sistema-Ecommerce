@@ -1,20 +1,18 @@
-import requests, uvicorn
+import requests, uvicorn, re
 
 from fastapi import FastAPI, Query, HTTPException
-from principal_functions import valida_email
 from pydantic import BaseModel
-
 from principal_service import Principal
 
 service = Principal()
-base_url = "http://127.0.0.1:8080"
+base_url = "http://localhost:8080"
 
 class Pedido(BaseModel):
     categoria: str
     email: str
 
 app = FastAPI (
-    title="Paper Paws", # mudar depois rs
+    title="Paper Paws", 
     version="1.0.0",
     description="Escrever alguma descrição aqui!",
 )
@@ -32,24 +30,24 @@ def livros():
         return response.json()
 
 # criar pedidos
-# @app.post("/pedido", tags=["pedido"], responses={
-#     200: {"description": "Pedido criado"},
-#     422: {"description": "Falha na requisicao"},
-#     500: {"description": "Erro ao criar pedido"},
-# })
-# def criar_pedido(
-#     id_livro: str = None,
-#     quantidade: int = None
-# ):
-#     try:
-#         id_pedido = service.criar_pedido()
-#     except Exception as exc:
-#         raise HTTPException(status_code=500)
+@app.post("/pedido", tags=["pedido"], responses={
+    200: {"description": "Pedido criado"},
+    422: {"description": "Falha na requisicao"},
+    500: {"description": "Erro ao criar pedido"},
+})
+def criar_pedido(
+    id_livro: str = None,
+    quantidade: int = None
+):
+    try:
+        id_pedido = service.criar_pedido()
+    except Exception as exc:
+        raise HTTPException(status_code=500)
 
-#     return {
-#         "id_pedido": id_pedido, 
-#         "status": "criado"
-#     }
+    return {
+        "id_pedido": id_pedido, 
+        "status": "criado"
+    }
 
 # registrar interesse, informando email e categoria
 @app.post("/registro/{categoria}", tags=["interesse"])
@@ -57,14 +55,14 @@ def registro_interesse(
     email: str = Query(description="Email do cliente", example="cliente@exemplo.com"),
     categoria: str = None
 ):
-    if not valida_email(email): # funcao de validacao de email
-        raise HTTPException(status_code=422,)
+    padrao = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(padrao, email): # funcao de validacao de email
+        raise HTTPException(status_code=422)
     try:
         mensagem = {
             "email": email,
             "categoria": categoria
         }
-
         service.publicar_evento(mensagem, "interesse.promocao")
 
     except Exception as exc:
@@ -83,8 +81,9 @@ def cancela_interesse(
     categoria: str,
     email: str = Query(description="Email do cliente", example="cliente@exemplo.com")
 ):  
-    if not valida_email(email): # funcao de validacao de email
-        raise HTTPException(status_code=422,)
+    padrao = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(padrao, email): # funcao de validacao de email
+        raise HTTPException(status_code=422)
     try: 
         mensagem = {
             "email": email,

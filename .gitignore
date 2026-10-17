@@ -2,3 +2,5 @@
 __pycache__
 private_keys/
 public_keys
+
+.env

@@ -1,18 +1,15 @@
 body {
     margin: 0;
+    padding: 0 20px;
     font-family: 'Lora', Georgia, 'Times New Roman', serif;
     background-color: #DBCDB4;
     color: #1D1101;
-    padding: 0 60px
 }
 
 .menu {
   display: flex;
-  justify-content: flex-end;  
-  gap: 30px;                 
-  margin-top: 2rem;
-  padding: 0 24px;         
-  background-color: #DBCDB4;
+  justify-content: flex-end;                      
+  height: 80px;
 
   .botao {
     background-color: transparent;
@@ -22,13 +19,18 @@ body {
 }
 
 .titulo {
+    margin-top: 4rems;
     text-align: center;
     font-size: 2.5rem;
     font-weight: 500;
 }
+
 .subtitulo {
+    margin-top: 4rem;
+    margin-bottom: 4rem;
     font-size: 2rem;
     font-weight: 400;
+    text-align: center;
 }
 
 .container-interesse {
@@ -49,4 +51,46 @@ body {
 
 .categorias {
   text-align: left;    
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;                
+  padding: 16px;
+  border: 1px solid #c9b99a;
+  border-radius: 16px;
+  background: #e8dcc6;
+}
+
+/* Catalogo */
+.container-catalogo {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 50px;
+  max-width: 1200px; 
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+.card-img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+}
+
+.card-nome {
+  font-weight: 600;
+  text-align: center;
+}
+
+.card-preco {
+  font-weight: 700;
+
+  text-align: center;
+}
+
+.card-info {
+  display: flex;
+  flex-direction: column;  
+  gap: 4px;
 }

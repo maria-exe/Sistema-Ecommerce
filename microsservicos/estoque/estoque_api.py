@@ -17,7 +17,7 @@ def consultar_estoque():
             "autor": produto[2],
             "categoria": produto[3],
             "preco": produto[4], 
-            "quantidade": produto[4]
+            "quantidade": produto[5]
         }
         for produto in produtos
     ]
