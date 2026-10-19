@@ -27,7 +27,7 @@ class Promocoes:
         self.caminho_privado = os.path.join(dir_atual, "private_keys", "private_key.der")
         self.caminho_publico = os.path.join(dir_atual, "public_keys", "principal_public_key.der")
 
-    def get_produtos(self): # pegas os produtos
+    def get_produtos(self): # pega os produtos
         url = "http://localhost:8080/estoque"
         produtos = requests.get(url, timeout=5)
         return produtos.json().get("produtos", [])
@@ -74,7 +74,7 @@ class Promocoes:
         html = html.replace("{desconto}", str(desconto))
         
         params: resend.Emails.SendParams = {
-        "from": "Sebo Decidir <onboarding@resend.dev>",
+        "from": "Página Sete <onboarding@resend.dev>",
         "to": [receiver],
         "subject": f"Promoção para livros de {categoria}!",
         "html": html,

@@ -1,6 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
-from bd.estoque_bd import consulta_produtos
+from bd import estoque_bd as bd
 
 app = FastAPI(
     title="Estoque do Sebo"
@@ -8,7 +8,7 @@ app = FastAPI(
 
 @app.get("/estoque", tags=["estoque"], summary="produtos em estoque")
 def consultar_estoque():
-    produtos = consulta_produtos()
+    produtos = bd.consulta_produtos()
 
     produtos_disponiveis = [
         {
@@ -17,7 +17,8 @@ def consultar_estoque():
             "autor": produto[2],
             "categoria": produto[3],
             "preco": produto[4], 
-            "quantidade": produto[5]
+            "quantidade": produto[5],
+            "capa": produto[6]
         }
         for produto in produtos
     ]

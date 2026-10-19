@@ -1,5 +1,5 @@
 import requests, uvicorn, re
-
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Query, HTTPException
 from pydantic import BaseModel
 from principal_service import Principal
@@ -15,6 +15,16 @@ app = FastAPI (
     title="Paper Paws", 
     version="1.0.0",
     description="Escrever alguma descrição aqui!",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # listar produtos
@@ -49,10 +59,26 @@ def criar_pedido(
         "status": "criado"
     }
 
+
+@app.delete("/pedido/cancela/{id_pedido}", tags=["pedido"], responses={
+    200: {"description": "Pedido cancaelado"}
+})
+def cancela_pedido(
+    id_pedido: str
+):
+    try: 
+        service.cancela_pedido(id_pedido)
+    except Exception as exc: 
+        raise HTTPException(status_code=500)
+
+    return {
+        "mensagem": "Pedido cancelado"
+    }
+
 # registrar interesse, informando email e categoria
-@app.post("/registro/{categoria}", tags=["interesse"])
+@app.post("/registro/{categoria}/{email}", tags=["interesse"])
 def registro_interesse(
-    email: str = Query(description="Email do cliente", example="cliente@exemplo.com"),
+    email: str = Query(description="Email do cliente", examples="cliente@exemplo.com"),
     categoria: str = None
 ):
     padrao = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -98,6 +124,7 @@ def cancela_interesse(
     return {
         "mensagem": f"Inscrição cancelada para {categoria}!"
     }
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

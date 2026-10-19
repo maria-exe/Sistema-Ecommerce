@@ -1,7 +1,7 @@
 import sys, os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-import microsservicos.shared.rabbitmq as rabbit
-import microsservicos.estoque.bd.estoque_bd as bd
+import shared.rabbitmq as rabbit
+from .bd import estoque_bd as bd
 
 class Estoque:
     def __init__(self):
@@ -27,8 +27,6 @@ class Estoque:
     def callback(self, ch, chave, mensagem):
         livros_pedidos = mensagem["produtos"]
         id_pedido = mensagem["id_pedido"]
-
-        print(f"Pedido {id_pedido} recebido.")
         
         if chave == "pedido.criado":
             temEstoque = bd.verificar_estoque(livros_pedidos)

@@ -12,6 +12,7 @@ class Principal:
         self.queue_name = "fila_principal"
 
         dir = os.path.dirname(os.path.abspath(__file__))
+        
         self.servico = "principal"
         self.caminho = os.path.join(dir, "private_keys", "private_key.der")
         self.caminho_publico = os.path.join(dir, "public_keys")
@@ -32,31 +33,29 @@ class Principal:
         canal_usado = canal if canal else self.publica_channel
         rabbit.publicar(canal_usado, self.servico, self.caminho, "eCommerce", routing_key, mensagem)
 
-    # funcoes de iteracao
-    def excluir_pedido(self, id_pedido):        
-        with self.pedidos_lock:
-            if id_pedido not in self.pedidos:
-                print("Pedido não encontrado.")
-                return
 
-            status_atual = self.pedidos[id_pedido]["status"]
-            if "excluido" in status_atual:
-                print(f"\nO pedido {id_pedido} ja foi excluido.")
-                return
+    def cancela_pedido(self, id_pedido):        
+        with self.pedidos_lock:
+            pedido = self.pedidos.get(id_pedido)
+
+            if pedido is None:
+                return "nao_encontrado"
+
+            if pedido == "excluido" or pedido == "cancelado":
+                return "ja_excluido"
             
             produtos = self.pedidos[id_pedido]["produtos"]
-            self.pedidos[id_pedido]["status"] = "excluido"
+            pedido["status"] = "excluido"
 
         mensagem = {
             "id_pedido": id_pedido,
             "produtos": produtos
         }
-
         self.publicar_evento(mensagem, "pedido.excluido", self.publica_channel)
 
     def criar_pedido(self, produtos):
         if not produtos:
-            raise ValueError("Nenhum produto selecionado.")
+            raise ValueError("Nenhum produto selecionado")
         
         id_pedido = str(uuid.uuid4())[:8] 
 
@@ -67,8 +66,8 @@ class Principal:
 
         with self.pedidos_lock:
             self.pedidos[id_pedido] = {"status": "criado", "produtos": produtos}
-        self.publicar_evento(mensagem, "pedido.criado", self.publica_channel)
         
+        self.publicar_evento(mensagem, "pedido.criado", self.publica_channel)
         return id_pedido
 
     def consultar_pedido(self):

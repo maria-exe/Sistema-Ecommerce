@@ -1,8 +1,10 @@
 <!DOCTYPE html>
+<html lang="pt-br">
 <html>
     <head>
+        <meta charset="UTF-8">
         <title>
-            Sebo Decidir
+            Página Sete
         </title>
         <link rel="stylesheet" href="style.css">
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -10,44 +12,45 @@
         <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
     </head>
     <body>
-        <div class="menu">
-           <button class="botao">
-                <img src="assets/clipboard-list.svg" alt="Pedidos">
-           </button>
-            <button class="botao">
-                <img src="assets/shopping-cart.svg" alt="Carrinho">
-           </button>
-        </div>
-        <h1 class="titulo">
-            Sebo Decidir
-        </h1>
-        <h2 class="subtitulo">Catálogo</h2>
-        <div class="container-catalogo" id="catalogo"></div>
-        
-        <div class="container-interesse">
-            <h2>Inscreva-se para receber promoções!</h2>
+        <header class="menu">
+            <a class="menu-link" href="#promocoes">Novidades</a>
+            <a class="titulo">[Página Sete]</a>
+            <div class="menu-botoes">
+                <button class="botao">Pedidos</button>
+
+                <button class="botao" id="abrir-carrinho" aria-label="Abrir carrinho">
+                    <img src="assets/shopping-basket.svg" alt="Carrinho">
+                </button>
+            </div>
+        </header>
+
+        <section id="catalogo">
+            <div class="catalogo-texto">
+                <h2 class="subtitulo">Catálogo</h2>
+                <p>Confira nossa coleção de livros disponíveis para você!</p>
+            </div>
+            <div class="container-catalogo" id="catalogo"></div>
+        </section>
+        <section id="promocoes" class="container-interesse">
+            <h2>Inscreva-se para receber nossas promoções!</h2>
             <label for="email">Seu e-mail</label>
             <input type="email" id="email" name="email" required placeholder="Ex. seuemail@gmail.com"> 
 
-            <p>Escolha seus gêneros favoritos</p>
-            
+            <p class="categoria-titulo">Escolha seus gêneros favoritos</p>
             <div class="categorias">
-                <input type="checkbox" id="romance" name="genero" value="romance">
+                <input class="categoria" type="checkbox" id="romance" name="genero" value="romance">
                 <label for="romance">Romance</label><br>
 
-                <input type="checkbox" id="terror" name="genero" value="terror">
+                <input class="categoria" type="checkbox" id="terror" name="genero" value="terror">
                 <label for="terror">Terror</label><br>
 
-                <input type="checkbox" id="quadrinhos" name="genero" value="quadrinho">
+                <input class="categoria" type="checkbox" id="quadrinhos" name="genero" value="quadrinho">
                 <label for="quadrinhos">Quadrinhos</label><br>
             </div>
-
-            <button class="botao-interesse">Enviar</button>
-        </div>
-        <footer>
-            @Sebo Decidir
-        </footer>
-        <script src="api.js"></script>
-        <script src="catalogo.js"></script>
+            <button class="botao-interesse" id="botaoInteresse">Inscreva-se</button>
+        </section>
+</aside>
     </body>
+    <script src="js/principal.js"></script>
+    <script src="js/promocao.js"></script>
 </html>
