@@ -5,16 +5,16 @@ from pydantic import BaseModel
 from principal_service import Principal
 
 service = Principal()
-base_url = "http://localhost:8080"
+base_url = "http://localhost:8080" # estoque
 
 class Pedido(BaseModel):
-    categoria: str
+    categoria: str # ver se ta certo
     email: str
 
 app = FastAPI (
-    title="Paper Paws", 
+    title="Palavra Sete", 
     version="1.0.0",
-    description="Escrever alguma descrição aqui!",
+    description="API do Sebo Palavra Sete",
 )
 
 app.add_middleware(
@@ -27,7 +27,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# listar produtos
+# lista produtos
 @app.get("/produtos", tags=["pedido"], responses={
     200: {"description": "Consulta no estoque bem-sucedida"},
     500: {"description": "Erro ao consultar estoque"}
