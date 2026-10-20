@@ -15,11 +15,3 @@ export function recebe_status() {
     };
 }
 
-export async function produtos() {
-  const resp = await fetch(`${baseUrl}/produtos`);  
-  if (!resp.ok) {
-    throw new Error(`Erro de requisição: ${resp.status}`);
-  }
-  const dados = await resp.json();
-  return dados.produtos || [];
-}

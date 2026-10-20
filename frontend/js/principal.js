@@ -1,15 +1,14 @@
-import {recebe_status, produtos} from api.js
 const baseUrl = "http://localhost:8000"; 
 let carrinho = []; 
 
-// async function getProdutos() {
-//   const resp = await fetch(`${baseUrl}/produtos`);  
-//   if (!resp.ok) {
-//     throw new Error(`Erro de requisição: ${resp.status}`);
-//   }
-//   const dados = await resp.json();
-//   return dados.produtos || [];
-// }
+async function getProdutos() {
+  const resp = await fetch(`${baseUrl}/produtos`);  
+  if (!resp.ok) {
+    throw new Error(`Erro de requisição: ${resp.status}`);
+  }
+  const dados = await resp.json();
+  return dados.produtos || [];
+}
 
 function formatarPreco(valor) {
   return `R$ ${Number(valor).toFixed(2).replace(".", ",")}`;
@@ -105,5 +104,3 @@ async function carregarCatalogo() {
 }
 
 carregarCatalogo();
-
-
