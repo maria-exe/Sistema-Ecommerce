@@ -1,5 +1,8 @@
 import sys, os
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import shared.rabbitmq as rabbit
 import uuid
 import threading 
@@ -20,10 +23,11 @@ class Principal:
         self.pedidos_lock = threading.Lock()
         self.pedidos = {}
    
-    def consumir_evento(self): #
+    def consumir_evento(self): 
         self.consome_connection, self.consome_channel = rabbit.conectar()
         rabbit.exchange_ecommercie(self.consome_channel)
 
+        # eventos consumidos
         binding_keys = ["pagamento.aprovado", "pagamento.recusado", "pedido.enviado", "pedido.estoque_ok", "estoque.indisponivel"]
         
         rabbit.binding(self.consome_channel, self.queue_name, binding_keys, "eCommerce")
@@ -33,7 +37,6 @@ class Principal:
         canal_usado = canal if canal else self.publica_channel
         rabbit.publicar(canal_usado, self.servico, self.caminho, "eCommerce", routing_key, mensagem)
 
-
     def cancela_pedido(self, id_pedido):        
         with self.pedidos_lock:
             pedido = self.pedidos.get(id_pedido)
@@ -41,7 +44,7 @@ class Principal:
             if pedido is None:
                 return "nao_encontrado"
 
-            if pedido == "excluido" or pedido == "cancelado":
+            if pedido["status"] == "excluido" or pedido["status"] == "cancelado":
                 return "ja_excluido"
             
             produtos = self.pedidos[id_pedido]["produtos"]
@@ -52,7 +55,7 @@ class Principal:
             "produtos": produtos
         }
         self.publicar_evento(mensagem, "pedido.excluido", self.publica_channel)
-
+ 
     def criar_pedido(self, produtos):
         if not produtos:
             raise ValueError("Nenhum produto selecionado")
@@ -103,14 +106,13 @@ class Principal:
                 mensagem_exclusao = {
                     "id_pedido": id_pedido,
                     "produtos": produtos,
-                    "motivo": chave 
                 }
+
                 self.publicar_evento(mensagem_exclusao, "pedido.excluido", ch)
 
 def main():
     principal = Principal()
-    thread_eventos = threading.Thread(target=principal.consumir_evento, daemon=True)
-    thread_eventos.start()
+    principal.consumir_evento()  
 
 if __name__ == "__main__":
     main() 

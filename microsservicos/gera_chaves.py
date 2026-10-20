@@ -25,7 +25,8 @@ def gera_chaves():
         "principal": ["estoque", "pagamento", "entrega"], 
         "estoque": ["principal"],                        
         "pagamento": ["estoque"],                        
-        "entrega": ["pagamento"]                          
+        "entrega": ["pagamento"],
+        "promocoes": ["principal"],                          
     }
     
     for consumidor, produtores in distribuicao.items():

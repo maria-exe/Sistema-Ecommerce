@@ -7,9 +7,9 @@ caminho = os.path.join(diretorio, "estoque.db")
 connection = sqlite3.connect(caminho, check_same_thread=False)
 cursor = connection.cursor()
 
-create_table = '''
+cursor.execute ('''
     CREATE TABLE IF NOT EXISTS Livros (
-        id TEXT, 
+        id TEXT PRIMARY KEY, 
         titulo TEXT NOT NULL,
         autor TEXT NOT NULL,
         categoria TEXT NOT NULL,
@@ -17,8 +17,14 @@ create_table = '''
         quantidade INTEGER,
         capa TEXT NOT NULL
     );
-    '''
-cursor.execute(create_table)
+    ''')
+
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS Reservas (
+        id_pedido TEXT PRIMARY KEY
+    );
+''')
+
 connection.commit()
 
 # preenche o bd
@@ -38,35 +44,48 @@ if cursor.fetchone()[0] == 0:
 
     connection.commit()
 
-# funcoes para manipular o estoque
-def verificar_estoque(pedidos): 
-    for pedido in pedidos:
-        id_livro = pedido["id_livro"] 
-        quantidade = pedido["quantidade"]
-        
-        cursor.execute("SELECT quantidade FROM Livros WHERE id = ?", (id_livro,))
-        estoque = cursor.fetchone()
-        
-        if estoque is None or estoque[0] < quantidade:
+def pedido_reservado(id_pedido):
+    cursor.execute("SELECT 1 FROM Reservas WHERE id_pedido = ?", (id_pedido,))
+    return cursor.fetchone() is not None
+
+def reservar_pedido(id_pedido, pedidos):
+    try:
+        for p in pedidos:
+            cursor.execute(
+                "UPDATE Livros SET quantidade = quantidade - ? "
+                "WHERE id = ? AND quantidade >= ?",
+                (p["quantidade"], p["id_livro"], p["quantidade"]),
+            )
+            if cursor.rowcount == 0:        
+                connection.rollback()      
+                return False
+
+        cursor.execute("INSERT INTO Reservas (id_pedido) VALUES (?)", (id_pedido,))
+        connection.commit()
+        return True
+    
+    except Exception:
+        connection.rollback()
+        raise
+
+def devolver_pedido(id_pedido, pedidos):
+    try:
+        cursor.execute("DELETE FROM Reservas WHERE id_pedido = ?", (id_pedido,))
+        if cursor.rowcount == 0:        
+            connection.rollback()
             return False
-    return True 
 
-def devolver_produto(pedidos):
-    for pedido in pedidos:
-        id_livro = pedido["id_livro"]
-        quantidade = pedido["quantidade"]
-        cursor.execute("UPDATE Livros SET quantidade = quantidade + ? WHERE id = ?", (quantidade, id_livro,))
-    connection.commit()
+        for p in pedidos:
+            cursor.execute(
+                "UPDATE Livros SET quantidade = quantidade + ? WHERE id = ?",
+                (p["quantidade"], p["id_livro"]),
+            )
+        connection.commit()
+        return True
+    except Exception:
+        connection.rollback()
+        raise
 
-def reservar_produto(pedidos):
-    for pedido in pedidos:
-        id_livro = pedido["id_livro"]
-        quantidade = pedido["quantidade"]
-        cursor.execute("UPDATE Livros SET quantidade = quantidade - ? WHERE id = ?", (quantidade, id_livro,))
-    connection.commit()
-
-# nova funcao que vai ser chamada para a api 
-# lista todos os produtos que estao em estoque
 def consulta_produtos():
-    produtos = cursor.execute("SELECT * from Livros WHERE quantidade > 0")
-    return produtos
+    cursor.execute("SELECT * FROM Livros WHERE quantidade > 0")
+    return cursor.fetchall()

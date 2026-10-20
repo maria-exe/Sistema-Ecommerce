@@ -4,7 +4,9 @@ from fastapi import FastAPI, Form, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-app = FastAPI(title="Mock de Pagamento Externo")
+app = FastAPI(
+    title="Mock de Pagamento Externo"
+)
 
 # dicionario para guardar as cobranças ativas
 cobrancas = {}
@@ -18,7 +20,7 @@ class CriarCobrancaRequest(BaseModel):
 # o ms chama esse endpoint pra gerar a cobranca
 @app.post("/cobranca")
 def criar_cobranca(req: CriarCobrancaRequest):
-    #codigo unico para a sessao de pagamento
+    # codigo unico para a sessao de pagamento
     cobranca_id = str(uuid.uuid4())[:8]
     
     cobrancas[cobranca_id] = {
@@ -99,7 +101,6 @@ def processar_pagamento(cobranca_id: str, status: str = Form(...)):
     <body style="font-family: Arial, sans-serif; text-align: center; margin-top: 60px;">
         <h2>Resultado: Pagamento {status}</h2>
         <p>{mensagem_envio}</p>
-        <p>Pode fechar este separador e voltar à aplicação.</p>
     </body>
     </html>
     """

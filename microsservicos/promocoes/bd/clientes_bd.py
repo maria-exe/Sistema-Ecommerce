@@ -10,7 +10,7 @@ cursor = connection.cursor()
 create_table = '''
     CREATE TABLE IF NOT EXISTS Interesses (
         email TEXT NOT NULL, 
-        categoria TEXT NOT NULL
+        categoria TEXT NOT NULL,
         PRIMARY KEY (email, categoria)
     );
     '''
@@ -20,21 +20,20 @@ connection.commit()
 
 def registra(email, categoria):
     cursor.execute("INSERT OR IGNORE INTO Interesses VALUES (?, ?)", 
-                   (email.lower(), categoria,),
-    )
+            (email.lower(), categoria,),  )
     connection.commit()
 
 def apaga_registro(email, categoria):
     email = email.lower()
     if categoria: 
         cursor.execute("DELETE FROM Interesses WHERE email = ? AND categoria = ?", 
-                       (email, categoria),
-        )
+                (email, categoria),)
     else: 
         cursor.execute("DELETE FROM Interesses WHERE email = ?", 
-                        (email,),
-        )
+                (email,),)
     connection.commit()
 
 def interesses():
-    pass
+    cursor.execute("SELECT email, categoria FROM Interesses")
+    resultados = cursor.fetchall()
+    return resultados

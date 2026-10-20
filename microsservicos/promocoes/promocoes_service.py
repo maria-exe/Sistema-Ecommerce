@@ -1,4 +1,4 @@
-import random
+import random, time, threading
 import sys, os
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
@@ -24,46 +24,51 @@ class Promocoes:
         self.servico = "promocoes"
         self.queue_name = "promocoes_queue"
 
+        self.caminho_publico = os.path.join(dir_atual, "public_keys")
         self.caminho_privado = os.path.join(dir_atual, "private_keys", "private_key.der")
-        self.caminho_publico = os.path.join(dir_atual, "public_keys", "principal_public_key.der")
 
     def get_produtos(self): # pega os produtos
         url = "http://localhost:8080/estoque"
-        produtos = requests.get(url, timeout=5)
-        return produtos.json().get("produtos", [])
+        try:
+            response = requests.get(url, timeout=5)
+            if response.status_code == 200:
+                return response.json().get("produtos", [])
+        except Exception as e:
+            print(f"Erro ao acessar estoque: {e}")
+        return []
     
     def consumir_evento(self):
         binding_keys = ["interesse.promocao", "interesse.cancelado"] # routing para cancelar interesse
         rabbit.binding(self.channel, self.queue_name, binding_keys, "eCommerce")
         rabbit.consumir(self.channel, self.queue_name, self.callback, self.caminho_publico)
 
-    def gera_promocoes(self, email, categoria):
-        produtos = self.get_produtos()
+    def gera_promocoes(self, email, categorias):
+        candidatos = [produto for produto in self.get_produtos()
+                    if produto["categoria"].lower() in categorias and produto["quantidade"] > 0]
         
-        produtos_promocoes = []
+        if not candidatos:
+            return
 
-        # envia promocoes de produtos da categoria de interesse
-        for produto in produtos:
-            if produto["categoria"] == categoria:
-                produtos_promocoes.append(produto)
-
-        if not produtos_promocoes:
-            return 
-
-        livro = random.choice(produtos_promocoes)
+        livro = random.choice(candidatos)
         desconto = random.randint(20, 80)
+        self.envia_email(email, livro["titulo"], desconto, livro["categoria"])
 
-        self.envia_email(email, livro["titulo"], desconto, categoria)
-    
+
     def callback(self, ch, chave, dados):
         email = dados["email"]
-        categoria = dados["categoria"] 
+        categorias = dados.get("categorias") 
 
         if chave == "interesse.promocao":
-            bd.registra(email, categoria)  
-            self.gera_promocoes(email, categoria)
-        else:
-            bd.apaga_registro(email, categoria) 
+            for categoria in categorias:
+                bd.registra(email, categoria)
+            self.gera_promocoes(email, categorias)
+
+        elif chave == "interesse.cancelado":
+            if categorias:
+                for categoria in categorias:
+                    bd.apaga_registro(email, categoria)
+            else:
+                bd.apaga_registro(email, None)  
 
     def envia_email(self, receiver, livro, desconto, categoria):
         caminho = os.path.join(os.path.dirname(__file__), "email.html")
@@ -86,8 +91,30 @@ class Promocoes:
         except Exception as error:
             print(error)
 
+    def envio_periodico(self, intervalo_segundos=30):
+        while True:
+            time.sleep(intervalo_segundos)
+            try:
+                por_email = {}
+                for email, categoria in bd.interesses():      
+                    por_email.setdefault(email, []).append(categoria)
+
+                for email, categorias in por_email.items():
+                    self.gera_promocoes(email, categorias)
+                    time.sleep(0.5)                           
+            except Exception as e:
+                return
+
 def main(): 
     promocoes = Promocoes()
+    
+    thread_loop = threading.Thread(
+        target=promocoes.envio_periodico, 
+        args=(900,), 
+        daemon=True
+    )
+
+    thread_loop.start()
     promocoes.consumir_evento()
 
 if __name__ == "__main__":

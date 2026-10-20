@@ -34,10 +34,6 @@ class Pagamento:
             print(f"\nPagamento recusado para pedido {id_pedido}")
             self.publicar_evento(pedido, "pagamento.recusado")
 
-    def processa_pagamento(self, id_pedido):
-        print(f"\nProcessando pagamento do pedido: {id_pedido}\n")
-        return random.choice([True, False])
-
 def main():
     pagamento = Pagamento()
     pagamento.consumir_evento()
