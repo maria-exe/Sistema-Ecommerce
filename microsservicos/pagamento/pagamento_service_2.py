@@ -59,16 +59,12 @@ class Pagamento:
 #endpoint q recebe o webhook enviado pelo mock
 @app.post("/webhook/pagamento")
 def receber_webhook(payload: WebhookPayload):
-    print(f"\n[MS Pagamento] Webhook recebido! Pedido: {payload.id_pedido} | Status: {payload.status}")
-    
     pedido = {"id_pedido": payload.id_pedido}
     
     if payload.status.upper() == "APROVADO":
         pagamento_service.publicar_evento(pedido, "pagamento.aprovado")
-        print(f"[MS Pagamento] Evento 'pagamento.aprovado' publicado no RabbitMQ.")
     else:
         pagamento_service.publicar_evento(pedido, "pagamento.recusado")
-        print(f"[MS Pagamento] Evento 'pagamento.recusado' publicado no RabbitMQ.")
         
     return {"status": "sucesso"}
 

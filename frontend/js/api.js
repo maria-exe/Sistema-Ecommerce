@@ -1,10 +1,9 @@
 // funcoes de chamada de api e recebimento de eventos por SSE
-const baseUrl = "http://localhost:8000"
-
+const baseUrl = "http://localhost:8000";
 
 // recebe atualizacao do status dos pedidos por SSE
-export function recebe_status() {
-    const url = baseUrl + "/status"
+export function recebe_status(id_pedido) {
+    const url = baseUrl + `/sse/${id_pedido}`;
     const source = new EventSource(url)
 
     source.onmessage = function(event) {

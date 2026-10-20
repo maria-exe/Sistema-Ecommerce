@@ -4,8 +4,9 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import shared.rabbitmq as rabbit
-import uuid
-import threading 
+import uuid, threading 
+
+from estado import clientes_sse
 
 class Principal:
     def __init__(self):
@@ -50,10 +51,7 @@ class Principal:
             produtos = self.pedidos[id_pedido]["produtos"]
             pedido["status"] = "excluido"
 
-        mensagem = {
-            "id_pedido": id_pedido,
-            "produtos": produtos
-        }
+        mensagem = { "id_pedido": id_pedido, "produtos": produtos }
         self.publicar_evento(mensagem, "pedido.excluido", self.publica_channel)
  
     def criar_pedido(self, produtos):
@@ -61,11 +59,7 @@ class Principal:
             raise ValueError("Nenhum produto selecionado")
         
         id_pedido = str(uuid.uuid4())[:8] 
-
-        mensagem = {
-            "id_pedido": id_pedido,
-            "produtos": produtos
-        }
+        mensagem = { "id_pedido": id_pedido, "produtos": produtos }
 
         with self.pedidos_lock:
             self.pedidos[id_pedido] = {"status": "criado", "produtos": produtos}
@@ -73,33 +67,26 @@ class Principal:
         self.publicar_evento(mensagem, "pedido.criado", self.publica_channel)
         return id_pedido
 
-    def consultar_pedido(self):
-        with self.pedidos_lock: 
-            if not self.pedidos:
-                print("Você ainda não tem pedidos!")
-            for id_pedido, pedido in self.pedidos.items():
-                print(f"Pedido: {id_pedido} | Status: {pedido['status']}")
-
     # atualiza status e envia evento para excluir pedido
     def callback(self, ch, chave, mensagem):
         id_pedido = mensagem["id_pedido"]
 
         with self.pedidos_lock:
-
             if id_pedido not in self.pedidos:
                 print(f"\nEvento para pedido desconhecido {id_pedido}, ignorando.")
                 return
-            if chave == "pagamento.aprovado":
-                self.pedidos[id_pedido]["status"] = "pagamento aprovado"
-            elif chave == "pedido.enviado":
-                self.pedidos[id_pedido]["status"] = "pedido enviado"
-            elif chave == "pedido.estoque_ok":
-                self.pedidos[id_pedido]["status"] = "pedido em estoque"
-            elif chave == "estoque.indisponivel":
-                self.pedidos[id_pedido]["status"] = "pedido excluido por estoque indisponivel"
-            elif chave == "pagamento.recusado":
-                self.pedidos[id_pedido]["status"] = "pedido excluido por falha no pagamento"
 
+            status = ""
+            if chave == "pagamento.aprovado":
+                status = "pagamento aprovado"
+            elif chave == "pedido.enviado":
+                status = "pedido enviado"
+            elif chave == "pedido.estoque_ok":
+                status = "pedido em estoque"
+            elif chave == "estoque.indisponivel":
+                status= "pedido excluido por estoque indisponivel"
+            elif chave == "pagamento.recusado":
+                status = "pedido excluido por falha no pagamento"
 
             if chave in ["estoque.indisponivel", "pagamento.recusado"]:
                 produtos = self.pedidos[id_pedido]["produtos"]
@@ -107,8 +94,14 @@ class Principal:
                     "id_pedido": id_pedido,
                     "produtos": produtos,
                 }
-
                 self.publicar_evento(mensagem_exclusao, "pedido.excluido", ch)
+
+            if id_pedido in clientes_sse:
+                for fila in clientes_sse[id_pedido]:
+                    try:
+                        fila.put_nowait(status) 
+                    except Exception as e:
+                        print(f"Erro ao notificar SSE: {e}")
 
 def main():
     principal = Principal()

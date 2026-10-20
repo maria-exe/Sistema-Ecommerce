@@ -1,6 +1,11 @@
 const botaoInteresse = document.querySelector(".botao-interesse");
 const inputEmail = document.getElementById("email");
 
+
+
+
+
+
 function lerCategoriasSelecionadas() {
   return [...document.querySelectorAll('input[name="genero"]:checked')]
     .map(c => c.value);

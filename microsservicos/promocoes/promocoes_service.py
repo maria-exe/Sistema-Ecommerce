@@ -61,7 +61,6 @@ class Promocoes:
         if chave == "interesse.promocao":
             for categoria in categorias:
                 bd.registra(email, categoria)
-            self.gera_promocoes(email, categorias)
 
         elif chave == "interesse.cancelado":
             if categorias:
@@ -96,11 +95,11 @@ class Promocoes:
             time.sleep(intervalo_segundos)
             try:
                 por_email = {}
-                for email, categoria in bd.interesses():      
+                for email, categoria in bd.interesses(): # emails e interesses do bd  
                     por_email.setdefault(email, []).append(categoria)
 
                 for email, categorias in por_email.items():
-                    self.gera_promocoes(email, categorias)
+                    self.gera_promocoes(email, categorias) # envio de emails
                     time.sleep(0.5)                           
             except Exception as e:
                 return

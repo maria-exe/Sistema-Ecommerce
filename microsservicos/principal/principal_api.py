@@ -1,9 +1,13 @@
 import requests, uvicorn, re
-from fastapi.middleware.cors import CORSMiddleware
+import asyncio
+
 from fastapi import FastAPI, Query, HTTPException
+from fastapi.sse import EventSourceResponse
+from fastapi.middleware.cors import CORSMiddleware
+
 from pydantic import BaseModel, Field
 from principal_service import Principal
-import traceback
+from estado import clientes_sse
 
 service = Principal()
 base_url = "http://localhost:8080" # estoque
@@ -79,8 +83,7 @@ def criar_pedido(dados: NovoPedido):
     try:
         id_pedido = service.criar_pedido(produtos)
     except Exception as exc:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(status_code=500)
 
     return {
         "id_pedido": id_pedido, 
@@ -115,8 +118,7 @@ def registro_interesse(dados: Interesse):
         service.publicar_evento(mensagem, "interesse.promocao") # publica interesse.promocao
 
     except Exception as exc:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(status_code=500)
 
     return { "mensagem": "Interesse registrado!" }
 
@@ -133,12 +135,32 @@ def cancela_interesse(dados: CancelaInteresse):
         service.publicar_evento(mensagem, "interesse.cancelado") # publica interesse.cancelado
 
     except Exception as exc: 
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(status_code=500)
 
     return {
         "mensagem": f"Interesse cancelado para {dados.categorias}!"
     }
+
+@app.get("/sse/{id_pedido}", response_class=EventSourceResponse)
+async def sse_status(id_pedido):
+    async def event_generator():
+        fila_cliente = asyncio.Queue()
+
+        if id_pedido not in clientes_sse:
+            clientes_sse[id_pedido] = []
+        clientes_sse[id_pedido] = []
+
+        try: 
+            status_pedido = await fila_cliente.get()
+            yield f"data: {status_pedido}\n\n"
+
+        finally:
+            if id_pedido in clientes_sse and fila_cliente in clientes_sse[id_pedido]:
+                clientes_sse[id_pedido].remove(fila_cliente)
+            if not clientes_sse.get(id_pedido):
+                clientes_sse.pop(id_pedido, None)
+
+    return EventSourceResponse(event_generator())
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
