@@ -109,7 +109,7 @@ def main():
     
     thread_loop = threading.Thread(
         target=promocoes.envio_periodico, 
-        args=(900,), 
+        args=(60,), 
         daemon=True
     )
 

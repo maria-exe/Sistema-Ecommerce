@@ -43,7 +43,7 @@ class Entrega:
 
     def callback(self, ch, chave, dados):
         id_pedido = dados["id_pedido"]  
-        produtos = dados["produtos"]
+        produtos = dados.get("produtos", [])
 
         print(f"\nPedido: {id_pedido} recebido.")
 

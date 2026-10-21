@@ -2,7 +2,7 @@ import sqlite3, os
 
 # cria o bd
 diretorio = os.path.dirname(os.path.abspath(__file__))
-caminho = os.path.join(diretorio, "estoque.db")
+caminho = os.path.join(diretorio, "interesses.db")
 
 connection = sqlite3.connect(caminho, check_same_thread=False)
 cursor = connection.cursor()

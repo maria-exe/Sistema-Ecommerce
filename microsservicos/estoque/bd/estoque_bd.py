@@ -31,11 +31,14 @@ connection.commit()
 cursor.execute("SELECT COUNT(*) FROM Livros")
 if cursor.fetchone()[0] == 0:
     livros = [
-        ("l01", "O Retrato de Dorian Gray", "Oscar Wilde", "Romance", 60.40, 10, "https://ecx.images-amazon.com/images/P/0199535981.01._SX600_SY1200_SCRM_.jpg",), 
-        ("l02", "Atelier of Witch", "Kamone", "Quadrinhos", 38, 5, "https://pics.cdn.librarything.com/picsizes/11/85/11859807-b-h1200-w600-pv25_596c2f337441425941724145_v5.jpg",),
-        ("l03", "Vidas Secas", "Graciliano Ramos", "Romance", 25, 5, "https://pics.cdn.librarything.com/picsizes/16/21/16219043-b-h1200-w600-pv25_59714e373977425941724145_v5.jpg",), 
-        ("l04", "Misery", "Stephen King", "Terror", 40, 1, "https://pics.cdn.librarything.com/picsizes/53/07/5307936-c-h1200-w600-pv25_5979442b5541425941724145_v5.jpg",), 
-        ("l05", "Mrs. Dalloway", "Virginia Woolf", "Romance", 41.24, 15, "https://ecx.images-amazon.com/images/P/0199536007.01._SX600_SY1200_SCRM_.jpg",)
+        ("l01", "O Retrato de Dorian Gray", "Oscar Wilde", "romance", 60.40, 10, "https://ecx.images-amazon.com/images/P/0199535981.01._SX600_SY1200_SCRM_.jpg",), 
+        ("l02", "Atelier of Witch", "Kamone", "quadrinhos", 38, 5, "https://pics.cdn.librarything.com/picsizes/11/85/11859807-b-h1200-w600-pv25_596c2f337441425941724145_v5.jpg",),
+        ("l03", "Vidas Secas", "Graciliano Ramos", "romance", 25, 5, "https://pics.cdn.librarything.com/picsizes/16/21/16219043-b-h1200-w600-pv25_59714e373977425941724145_v5.jpg",), 
+        ("l04", "Misery", "Stephen King", "terror", 40, 1, "https://pics.cdn.librarything.com/picsizes/53/07/5307936-c-h1200-w600-pv25_5979442b5541425941724145_v5.jpg",), 
+        ("l05", "Mrs. Dalloway", "Virginia Woolf", "romance", 41.24, 15, "https://ecx.images-amazon.com/images/P/0199536007.01._SX600_SY1200_SCRM_.jpg",),
+        ("l06", "Orgulho e Preconceito", "Jane Austen", "romance", 35.00, 2, "https://ecx.images-amazon.com/images/P/B016CXUR42.01._SX600_SY1200_SCRM_.jpg",),
+        ("l07", "One Room Angel", "Harada", "quadrinhos", 29, 3, "https://ecx.images-amazon.com/images/P/3551621357.01._SX600_SY1200_SCRM_.jpg",),
+        ("l08", "Touch Within the Abyss", "Moyori Mori", "quadrinhos", 40, 1, "https://ecx.images-amazon.com/images/P/1427881278.01._SX600_SY1200_SCRM_.jpg",),
     ]
 
     cursor.executemany (
