@@ -78,7 +78,7 @@ def processar_pagamento(cobranca_id: str, status: str = Form(...)):
 
     try:
         requests.post(cobranca["webhook_url"], json=payload, timeout=5)
-        mensagem_envio = "Pagamento aprovado com sucesso!"
+        mensagem_envio = "Resultado do pagamento enviado para o Webhook"
     except Exception as e:
         mensagem_envio = f"Erro ao chamar o Webhook: {str(e)}"
 
