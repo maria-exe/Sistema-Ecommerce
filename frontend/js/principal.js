@@ -1,6 +1,6 @@
 const baseUrl = "http://localhost:8000"; 
-let carrinho = []; 
 
+// funcoes que comunicam com o Gateaway
 async function getProdutos() {
   const resp = await fetch(`${baseUrl}/produtos`);  
   if (!resp.ok) {
@@ -10,6 +10,18 @@ async function getProdutos() {
   return dados.produtos || [];
 }
 
+async function carregarCatalogo() {
+  try {
+    const produtos = await getProdutos();
+    renderizarProdutos(produtos);
+  } catch (erro) {
+    console.error("Falha ao buscar os dados:", erro);
+    document.querySelector(".container-catalogo").textContent =
+      "Não foi possível carregar os produtos.";
+  }
+}
+
+// funcoes para o front
 function formatarPreco(valor) {
   return `R$ ${Number(valor).toFixed(2).replace(".", ",")}`;
 }
@@ -90,17 +102,6 @@ function adicionarAoCarrinho(produto, quantidade) {
     carrinho.push({ produto, quantidade });
   }
   console.log(carrinho);
-}
-
-async function carregarCatalogo() {
-  try {
-    const produtos = await getProdutos();
-    renderizarProdutos(produtos);
-  } catch (erro) {
-    console.error("Falha ao buscar os dados:", erro);
-    document.querySelector(".container-catalogo").textContent =
-      "Não foi possível carregar os produtos.";
-  }
 }
 
 carregarCatalogo();
