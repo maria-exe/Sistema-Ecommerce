@@ -1,12 +1,11 @@
 import sys, os
+import estado
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import shared.rabbitmq as rabbit
 import uuid, threading 
-
-from estado import clientes_sse
 
 class Principal:
     def __init__(self):
@@ -29,14 +28,25 @@ class Principal:
         rabbit.exchange_ecommercie(self.consome_channel)
 
         # eventos consumidos
-        binding_keys = ["pagamento.aprovado", "pagamento.recusado", "pedido.enviado", "pedido.estoque_ok", "estoque.indisponivel"]
+        binding_keys = ["pagamento.aprovado", "pagamento.recusado", "pedido.enviado", "pedido.estoque_ok", "estoque.indisponivel", "pagamento.cobranca_criada"]
         
         rabbit.binding(self.consome_channel, self.queue_name, binding_keys, "eCommerce")
         rabbit.consumir(self.consome_channel, self.queue_name, self.callback, self.caminho_publico)
 
-    def publicar_evento(self, mensagem, routing_key, canal=None): 
-        canal_usado = canal if canal else self.publica_channel
-        rabbit.publicar(canal_usado, self.servico, self.caminho, "eCommerce", routing_key, mensagem)
+    def publicar_evento(self, mensagem, routing_key, canal=None):
+        if canal is not None:
+            rabbit.publicar(canal, self.servico, self.caminho, "eCommerce", routing_key, mensagem)
+            return
+
+        conn, ch = rabbit.conectar()
+        try:
+            rabbit.exchange_ecommercie(ch)
+            rabbit.publicar(ch, self.servico, self.caminho, "eCommerce", routing_key, mensagem)
+        finally:
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     def cancela_pedido(self, id_pedido):        
         with self.pedidos_lock:
@@ -52,7 +62,7 @@ class Principal:
             pedido["status"] = "excluido"
 
         mensagem = { "id_pedido": id_pedido, "produtos": produtos }
-        self.publicar_evento(mensagem, "pedido.excluido", self.publica_channel)
+        self.publicar_evento(mensagem, "pedido.excluido")
  
     def criar_pedido(self, produtos):
         if not produtos:
@@ -64,7 +74,7 @@ class Principal:
         with self.pedidos_lock:
             self.pedidos[id_pedido] = {"status": "criado", "produtos": produtos}
         
-        self.publicar_evento(mensagem, "pedido.criado", self.publica_channel)
+        self.publicar_evento(mensagem, "pedido.criado")
         return id_pedido
 
     # atualiza status e envia evento para excluir pedido
@@ -83,29 +93,26 @@ class Principal:
                 status = "pedido enviado"
             elif chave == "pedido.estoque_ok":
                 status = "pedido em estoque"
+            elif chave == "pagamento.cobranca_criada":
+                status = "pagamento disponível"
             elif chave == "estoque.indisponivel":
-                status= "pedido excluido por estoque indisponivel"
+                status = "pedido excluido por estoque indisponivel"
             elif chave == "pagamento.recusado":
                 status = "pedido excluido por falha no pagamento"
 
+            self.pedidos[id_pedido]["status"] = status
+
             if chave in ["estoque.indisponivel", "pagamento.recusado"]:
-                produtos = self.pedidos[id_pedido]["produtos"]
                 mensagem_exclusao = {
                     "id_pedido": id_pedido,
-                    "produtos": produtos,
+                    "produtos": self.pedidos[id_pedido]["produtos"],
                 }
                 self.publicar_evento(mensagem_exclusao, "pedido.excluido", ch)
 
-            if id_pedido in clientes_sse:
-                for fila in clientes_sse[id_pedido]:
-                    try:
-                        fila.put_nowait(status) 
-                    except Exception as e:
-                        print(f"Erro ao notificar SSE: {e}")
+        msg = {"evento": chave, "status": status}
+        if chave == "pagamento.cobranca_criada":
+            msg["url_pagamento"] = mensagem["url_pagamento"]
+        if chave == "pedido.enviado" and "nota_fiscal" in mensagem:
+            msg["nota_fiscal"] = mensagem["nota_fiscal"]
 
-def main():
-    principal = Principal()
-    principal.consumir_evento()  
-
-if __name__ == "__main__":
-    main() 
+        estado.notificar(id_pedido, msg)

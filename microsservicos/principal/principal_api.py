@@ -1,21 +1,31 @@
 import requests, uvicorn, re
 import asyncio
+import estado, threading
 
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.sse import EventSourceResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel, Field
 from principal_service import Principal
-from estado import clientes_sse
+
+import traceback
+from contextlib import asynccontextmanager
 
 service = Principal()
 base_url = "http://localhost:8080" # estoque
+
+@asynccontextmanager
+async def lifespan(app):
+    estado.loop = asyncio.get_running_loop()
+    threading.Thread(target=service.consumir_evento, daemon=True).start()
+    yield
 
 app = FastAPI (
     title="Palavra Sete", 
     version="1.0.0",
     description="API do Sebo Palavra Sete",
+    lifespan=lifespan,
 )
 
 # liberar CORS
@@ -83,7 +93,8 @@ def criar_pedido(dados: NovoPedido):
     try:
         id_pedido = service.criar_pedido(produtos)
     except Exception as exc:
-        raise HTTPException(status_code=500)
+        traceback.print_exc()
+        raise HTTPException(status_code=500,  detail=str(exc))
 
     return {
         "id_pedido": id_pedido, 
@@ -118,7 +129,8 @@ def registro_interesse(dados: Interesse):
         service.publicar_evento(mensagem, "interesse.promocao") # publica interesse.promocao
 
     except Exception as exc:
-        raise HTTPException(status_code=500)
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(exc))
 
     return { "mensagem": "Interesse registrado!" }
 
@@ -142,25 +154,23 @@ def cancela_interesse(dados: CancelaInteresse):
     }
 
 @app.get("/sse/{id_pedido}", response_class=EventSourceResponse)
-async def sse_status(id_pedido):
-    async def event_generator():
-        fila_cliente = asyncio.Queue()
+async def sse_status(id_pedido: str):
+    estado.loop = asyncio.get_running_loop()
+    fila = asyncio.Queue()
 
-        if id_pedido not in clientes_sse:
-            clientes_sse[id_pedido] = []
-        clientes_sse[id_pedido] = []
+    for msg in list(estado.historico.get(id_pedido, [])): 
+        fila.put_nowait(msg)
+    estado.clientes_sse.setdefault(id_pedido, []).append(fila)
 
-        try: 
-            status_pedido = await fila_cliente.get()
-            yield f"data: {status_pedido}\n\n"
-
-        finally:
-            if id_pedido in clientes_sse and fila_cliente in clientes_sse[id_pedido]:
-                clientes_sse[id_pedido].remove(fila_cliente)
-            if not clientes_sse.get(id_pedido):
-                clientes_sse.pop(id_pedido, None)
-
-    return EventSourceResponse(event_generator())
+    try:
+        while True:
+            yield await fila.get()          
+    finally:
+        filas = estado.clientes_sse.get(id_pedido, [])
+        if fila in filas:
+            filas.remove(fila)
+        if not filas:
+            estado.clientes_sse.pop(id_pedido, None)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
