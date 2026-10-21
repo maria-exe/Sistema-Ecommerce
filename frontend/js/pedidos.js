@@ -34,7 +34,6 @@ function abrirStream(idPedido) {
   streams.set(idPedido, fonte);
 }
 
-
 // funcoes de frontend
 function fecharStream(idPedido) {
   const fonte = streams.get(idPedido);

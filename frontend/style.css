@@ -6,6 +6,16 @@ body {
     color: #1D1101;
 }
 
+.nome-loja {
+    display: flex;             
+    justify-content: center;   
+    align-items: center;       
+    font-size: 12px;   
+    background-color: #E5EAF0;   
+    height: 20px;      
+    margin: 0 -20px;         
+}
+
 .menu-link,
 button,
 input,
@@ -90,14 +100,13 @@ textarea {
   }
 
   .botao-interesse {
-    margin-top: 2rem;
+    margin-bottom: 1rem;
     background-color: #DBCDB4;
     color: #1D1101;
     height: 45px;
     width: 300px;
     border: none;
     border-radius: 20px;
-
     cursor: pointer;
 
     &:hover{
@@ -118,6 +127,7 @@ textarea {
 }
 
 .categorias {
+  margin-bottom: 2rem;
   display: flex;
   flex-wrap: wrap;         
   justify-content: center; 
@@ -211,11 +221,6 @@ textarea {
   padding: 0 8px;
   border-radius: 10px;
   height: 30px;
-}
-
-footer {
-  align-items: center;
-  text-align: center;
 }
 
 /* CSS do carrinho de compras */
